@@ -169,23 +169,23 @@ describe Configuration do
       context 'when has inherited profile values' do
         let(:config) do
           <<-CONFIG.strip_indent
-          foo:
-            extends: bar
-            values:
-              a: foo
-          bar:
-            values:
-              b: bar
+          debug:
+            extends: base
+            servers:
+              debug: https://debug.com
+          base:
+            servers:
+              release: https://release.com
           CONFIG
         end
 
         let(:resolved) do
-          Configuration.read('foo', config)
+          Configuration.read('debug', config)
         end
 
         it 'will deeply merge them' do
-          expect(resolved.values['a']).to eq('foo')
-          expect(resolved.values['b']).to eq('bar')
+          expect(resolved.servers['release']).to eq('https://release.com')
+          expect(resolved.servers['debug']).to eq('https://debug.com')
         end
       end
     end

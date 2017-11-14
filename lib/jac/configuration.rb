@@ -9,7 +9,7 @@ module Jac
   # key names (i.e. `extends`) each key in profile is a
   # configuration field. For example following yaml document
   #
-  # ```
+  # ```yml
   #
   #  foo:
   #    bar: 42
@@ -39,7 +39,7 @@ module Jac
   # profiles. To specify this one should use `extends` field
   # like that
   #
-  # ```
+  # ```yml
   #
   # base:
   #   application_name: my-awesome-app
@@ -56,7 +56,7 @@ module Jac
   #
   # In this example `debug` will receive following fields:
   #
-  # ```
+  # ```yml
   # application_name: my-awesome-app  # from base profile
   # port: 9292                        # from debug profile
   # version_name: 0.0.0               # from version profile
@@ -70,7 +70,7 @@ module Jac
   # are merged down together. Having sequence of files like
   # `.application.yml`, `.application.user.yml` with following content
   #
-  # ```
+  # ```yml
   # # .application.yml
   # base:
   #   user: deployer
@@ -80,7 +80,7 @@ module Jac
   #   # ... other values
   # ```
   #
-  # ```
+  # ```yml
   # # .application.user.yml
   # base:
   #  user: developer
@@ -96,14 +96,14 @@ module Jac
   # feature: it allows evaluate strings as ruby expressions
   # like this:
   #
-  # ```
+  # ```yml
   # foo:
   #   build_time: "#{Time.now}" # Will be evaluated at configuration resolving step
   # ```
   #
   # Configuration values are available to and can be referenced with `c`:
   #
-  # ```
+  # ```yml
   # base:
   #   application_name: my-awesome-app
   # debug:
@@ -120,13 +120,47 @@ module Jac
   #
   # ## Merging values
   #
-  # By default if one value definition overwrites another
+  # By default if one value have multiple defenitions it will be overwritten by
+  # topmost value. Except several cases where Jac handles value resolution
+  # specialy
+  #
   # ### Merging hashes
   #
+  # Hashes inside profile are recurseively merged automaticly. This rule works
+  # for profile extensions and value redefenitions too.
+  #
+  # Example:
+  #
+  # ```yml
+  # base:
+  #   servers:
+  #     release: http://release.com
+  #
+  # debug:
+  #   extends: base
+  #     debug: http://debug.com
+  #
+  # ```
   #
   # ### Merging sets
   #
+  # Sets allowed to be merged with `nil`s and any instance of `Enumerable`.
+  # Merge result is always new `Set` instance.
+  # ```yml
+  # release:
+  #   extends:
+  #     - no_rtti
+  #     - no_debug
+  #   flags: !set {} # empty set
+  # no_rtti:
+  #   flags:
+  #     - -fno-rtti
+  # no_debug:
+  #   flags:
+  #     - -DNDEBUG
+  # ```
   #
+  # Resulting profile will have `-fno-rtti, -DNDEBUG` in `release profile`
   # ## Generic profiles
   #
   # Same result as shown above can be achieved with generic profiles. Generic profile
@@ -151,18 +185,17 @@ module Jac
       DEFAULT_PROFILE_NAME = 'default'.freeze
       # Creates "empty" config
       DEFAULT_CONFIGURATION = -> () { { DEFAULT_PROFILE_NAME => {} } }
-      # Creates configuration reader
-      # @param streams [Array] of pairs containing YAML document and provided
-      # name for this stream
       attr_reader :merger
+      # Creates configuration reader
+      # @param [Array] streams of pairs containing YAML document and provided
+      #   name for this stream
       def initialize(streams)
         @streams = streams
         @merger = Merger.new
       end
 
       # Parses all streams and resolves requested profile
-      # @param profile [Array] list of profile names to be
-      # merged
+      # @param [Array] profile list of profile names to be merged
       # @return [OpenStruct] instance which contains all resolved profile fields
       def read(*profile)
         result = @streams
@@ -208,8 +241,8 @@ module Jac
       # @param [Hash] base value mappings
       # @param [Hash] values ovverides.
       # @return [Hash] merged profile
-      def merge!(base, overrides)
-        merger.merge!(base, overrides)
+      def merge!(base, values)
+        merger.merge!(base, values)
       end
 
       def resolve(profile, config)
@@ -373,13 +406,13 @@ module Jac
     end
 
     # List of files where configuration can be placed
-    # * `application.yml` - expected to be main configuration file.
+    # * `jac.yml` - expected to be main configuration file.
     # Usually it placed under version control.
-    # * `application.user.yml` - user defined overrides for main
+    # * `jac.user.yml` - user defined overrides for main
     # configuration, sensitive data which can't be placed
     # under version control.
-    # * `application.override.yml` - final overrides.
-    CONFIGURATION_FILES = %w[application.yml application.user.yml application.override.yml].freeze
+    # * `jac.override.yml` - final overrides.
+    CONFIGURATION_FILES = %w[jac.yml jac.user.yml jac.override.yml].freeze
 
     class << self
       # Generates configuration object for given profile

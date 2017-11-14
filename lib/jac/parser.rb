@@ -2,16 +2,17 @@ require 'psych'
 require 'set'
 
 module Jac
+  # Custom YAML parsing routines
   module Parser
     # Cutstom Yaml AST visitor
-    # @see {Psych::Visitors::ToRuby}
-    # While standart Psych visitor converts sets to `{ value => nil }` mappings
-    # we need explicitly convert those mappings to ruby {Set}
+    # @see Psych::Visitors::ToRuby
+    # While standard Psych visitor converts sets to `{ value => nil }` mappings
+    # we need explicitly convert those mappings to ruby [Set]
     class VisitorToRuby < Psych::Visitors::ToRuby
       # rubocop: disable Naming/MethodName
 
       # Uses standard Psych visitor to convert mapping to ruby object
-      # except `!set` case. Here we convert mapping to {Set}.
+      # except `!set` case. Here we convert mapping to [Set].
       # @param [Psych::Nodes::Mapping] o YAML AST node
       # @return [Object] parsed ruby object
       def visit_Psych_Nodes_Mapping(o)

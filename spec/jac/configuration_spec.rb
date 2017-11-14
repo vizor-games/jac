@@ -90,13 +90,29 @@ describe Configuration do
         expect(result.b).to eq(3)
       end
 
-      it 'allows regexps as profile names' do
-        config = <<-CONFIG.strip_indent
-        /final-(.+?)-([0-9]+)/:
-          server: 'zf-\#{c.captures[0]}-\#{c.captures[1]}'
-        CONFIG
-        result = Configuration.read('final-vk-1', config)
-        expect(result.server).to eq('zf-vk-1')
+      describe 'generic profiles' do
+        it 'allows regexps as profile names' do
+          config = <<-CONFIG.strip_indent
+          /final-(.+?)-([0-9]+)/:
+            server: 'zf-\#{c.captures[0]}-\#{c.captures[1]}'
+          CONFIG
+          result = Configuration.read('final-vk-1', config)
+          expect(result.server).to eq('zf-vk-1')
+        end
+
+        context 'when using named captures' do
+          named_captures = MatchData.instance_methods.include?(:named_captures)
+          let(:config) do
+            <<-CONFIG.strip_indent
+            /final-(?<network>.+)-(?<server>[0-9]+)/:
+              server: "zf-\#{c.named_captures['network']}-\#{c.named_captures['server']}"
+            CONFIG
+          end
+          it 'generates `named_captures` field in resolved profile', skip: !named_captures do
+            result = Configuration.read('final-vk-1', config)
+            expect(result.server).to eq('zf-vk-1')
+          end
+        end
       end
     end
 

@@ -1,0 +1,11 @@
+# ignore coverage 
+coverage
+
+# ignore generated docs
+doc
+
+# ignore yard working files
+.yardoc 
+
+# ignore vscode files 
+.vscode

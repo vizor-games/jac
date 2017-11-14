@@ -1,0 +1,29 @@
+Style/AsciiComments:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/BlockLength:
+  Exclude:
+    - 'Rakefile'
+    - '**/*.rake'
+    - 'test/**/*.rb'
+    - 'spec/**/*.rb'
+
+Style/HashSyntax:
+  Exclude:
+    # for task :foo => :bar definitions
+    - '**/Rakefile'
+    - '**/*.rake'
+    - '**/*.rake.rb'
+
+# bug in rubocop style checker
+Lint/InterpolationCheck:
+  Exclude:
+    - 'spec/jac/configuration_spec.rb'
+
+Eval:
+  Exclude:
+    # Allow eval for configuration values evaluation
+    - 'lib/jac/configuration.rb'

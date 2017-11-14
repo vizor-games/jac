@@ -1,5 +1,8 @@
 require 'tmpdir'
 require 'powerpack/string'
+require 'simplecov'
+
+SimpleCov.start
 require_relative './helpers/nested'
 
 # @param [String] path relative to lib folder

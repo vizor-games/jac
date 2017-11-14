@@ -131,7 +131,7 @@ specialy
 
 #### Merging hashes
 
-Hashes inside profile are recurseively merged automaticly. This rule works
+Hashes inside profile are recurseively merged automatically. This rule works
 for profile extensions and value redefenitions too.
 
 Example:
@@ -143,6 +143,7 @@ base:
 
 debug:
   extends: base
+  servers:                      # will contain {'debug' => 'https://debug.com', 'release' => 'https://release.com'}
     debug: 'http://debug.com'
 
 ```

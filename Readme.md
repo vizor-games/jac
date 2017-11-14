@@ -184,6 +184,9 @@ base:
 If profile name matches multiple generic profiles it not defined
 which profile will be used.
 
+>  If running on Ruby 2.4+ you can use named captures in generic profiles.
+> Named captures will be stored in `c.named_captures` as `Hash`. 
+
 ## License
 
 jac is licensed under the MIT licence. Please see the [LICENSE](LICENSE) for more information.

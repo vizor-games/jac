@@ -294,7 +294,9 @@ module Jac
       def generate_profile(match, matched_profile, profile_name)
         gen_profile = {}
         gen_profile['captures'] = match.captures if match.captures
-        gen_profile['named_captures'] = match.named_captures if match.named_captures
+        if match.respond_to?(:named_captures) && match.named_captures
+          gen_profile['named_captures'] = match.named_captures
+        end
         gen_profile.merge!(config[matched_profile])
 
         config[profile_name] = gen_profile

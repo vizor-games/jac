@@ -284,6 +284,17 @@ describe Configuration do
       expect(config.qoo).to eq(3)
     end
 
+    context 'when dir not specified' do
+      let(:conf) do
+        Configuration.load(%w[foo], files: Dir[File.join(@working_dir, '*.yml')])
+      end
+      it 'uses only provided path' do
+        expect(config.bar).to eq(1)
+        expect(config.baz).to eq(2)
+        expect(config.qoo).to eq(3)
+      end
+    end
+
     after(:all) do
       FileUtils.remove_entry(@working_dir)
     end

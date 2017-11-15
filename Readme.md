@@ -5,6 +5,30 @@
 [![Code Climate](https://codeclimate.com/github/vizor-games/jac/badges/gpa.svg)](https://codeclimate.com/github/vizor-games/jac)
 [![Build Status](https://travis-ci.org/vizor-games/jac.svg?branch=master)](https://travis-ci.org/vizor-games/jac)
 
+## Installation and usage
+
+To start using jac you need to add 
+
+```ruby
+gem 'jac', '0.0.2'
+```
+
+to your `Gemfile` and load configuration from default paths (`jac.yml`, `jac.user.yml`) relative to working dir:
+
+```ruby
+require 'jac'
+profile = %w[any profile combination]
+Jac::Configuration.load(profile) # => OpenStruct
+```
+
+or to load custom set of files:
+
+```ruby
+require 'jac'
+profile = %w[any profile combination]
+Jac::Configuration.load(profile, files: %w[example/config/base.yml example/config/custom.yml]) # => OpenStruct
+```
+
 ## Features
 
 Configuration is loaded from well formed YAML streams.

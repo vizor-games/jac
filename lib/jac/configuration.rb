@@ -429,10 +429,14 @@ module Jac
       end
 
       # Read configuration from configuration files.
+      # @praram [String or Array] profile which should be loaded
+      # @param [Array] files filenames to load
+      # @param [String] dir base directory path for provided files may be nil
+      # @return [OpenStruct] resolved profile values
       def load(profile, files: CONFIGURATION_FILES, dir: Dir.pwd)
         # Read all known files
         streams = files
-                  .map { |f| [File.join(dir, f), f] }
+                  .map { |f| [dir ? File.join(dir, f) : f, f] }
                   .select { |path, _name| File.exist?(path) }
                   .map { |path, name| [IO.read(path), name] }
         read(profile, *streams)

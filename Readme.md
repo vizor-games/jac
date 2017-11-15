@@ -112,7 +112,7 @@ debug:
 ```yml
 # .application.user.yml
 base:
-user: developer
+  user: developer
 ```
 
 We'll get `user` field overwritten with value from

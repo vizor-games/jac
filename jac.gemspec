@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'jac'
-  s.version     = '0.0.2'
+  s.version     = '0.0.3'
   s.date        = Time.now.strftime('%Y-%m-%d')
   s.summary     = 'Just Another Configuration Lib'
   s.description = 'Profile based configuration lib'

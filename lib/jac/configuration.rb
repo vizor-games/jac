@@ -433,7 +433,7 @@ module Jac
       # @param [Array] files filenames to load
       # @param [String] dir base directory path for provided files may be nil
       # @return [OpenStruct] resolved profile values
-      def load(profile, files: CONFIGURATION_FILES, dir: Dir.pwd)
+      def load(profile, files: CONFIGURATION_FILES, dir: nil)
         # Read all known files
         streams = files
                   .map { |f| [dir ? File.join(dir, f) : f, f] }

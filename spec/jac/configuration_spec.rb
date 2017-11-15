@@ -285,8 +285,11 @@ describe Configuration do
     end
 
     context 'when dir not specified' do
-      let(:conf) do
-        Configuration.load(%w[foo], files: Dir[File.join(@working_dir, '*.yml')])
+      let(:config) do
+        files = Configuration::CONFIGURATION_FILES.map do |f|
+          File.join(@working_dir, f)
+        end
+        Configuration.load('foo', files: files)
       end
       it 'uses only provided path' do
         expect(config.bar).to eq(1)

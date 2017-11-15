@@ -10,7 +10,7 @@
 To start using jac you need to add 
 
 ```ruby
-gem 'jac', '0.0.2'
+gem 'jac', '0.0.3'
 ```
 
 to your `Gemfile` and load configuration from default paths (`jac.yml`, `jac.user.yml`) relative to working dir:

@@ -143,6 +143,15 @@ release:
   server_name: "#{c.application_name}-release" # yields to my-awesome-app-release
 ```
 
+_local_ values can be referenced through self, e.g.:
+
+```yml
+default:
+  project:
+    network: fb
+    server_name: "#{self['network']}-srv" # => 'fb-srv'
+```
+
 All strings evaluated **after** profile is constructed thus
 you don't need to have declared values in current profile
 but be ready to get `nil`.

@@ -367,6 +367,8 @@ module Jac
       private
 
       def resolve_object
+        # Initialize context object with root
+        @ctx_object = @object
         @object.each_key { |k| evaluate(k) }
         # Cleanup accidentally created values (when referencing missing values)
         @evaluated.delete_if { |k, _v| !@object.key?(k) }
@@ -376,15 +378,19 @@ module Jac
         binding
       end
 
-      def evaluate_deep(object)
+      def evaluate_deep(object) # rubocop:disable Metrics/MethodLength
         case object
         when String
           eval_string(object)
         when Array
-          object.map { |e| evaluate_deep(e) }
+          contextual(object) do
+            object.map { |e| evaluate_deep(e) }
+          end
         when Hash
           # Evaluating values only by convention
-          object.inject({}) { |acc, elem| acc.update(elem.first => evaluate_deep(elem.last)) }
+          contextual(object) do
+            object.inject({}) { |acc, elem| acc.update(elem.first => evaluate_deep(elem.last)) }
+          end
         else
           object
         end
@@ -396,6 +402,31 @@ module Jac
         end
 
         evaluated || o
+      end
+
+      def respond_to_missing?(meth, args, &block)
+        @ctx_object && @ctx_object.respond_to?(meth, args, &block)
+      end
+
+      def method_missing(meth, *args, &block)
+        # rubocop ispection hack
+        return super unless respond_to_missing?(meth, args, &block)
+        @ctx_object.send(meth, *args, &block)
+      end
+
+      # Keeps track of current context objects
+      # This trick allows us to reference local variables
+      # using `self` calls.
+      # @param ctx [Object] object to use in current evaluation
+      # @param &block [Proc] evluation logic
+      # @return [Object] result of evaluation
+      def contextual(ctx)
+        memo = @ctx_object
+        @ctx_object = ctx
+        result = yield
+        @ctx_object = memo
+
+        result
       end
 
       class << self

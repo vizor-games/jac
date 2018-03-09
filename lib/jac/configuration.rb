@@ -1,6 +1,8 @@
 require 'yaml'
 require 'ostruct'
 
+require_relative 'value'
+
 module Jac
   # Configuration is loaded from well formed YAML streams.
   # Each document expected to be key-value mapping where
@@ -192,44 +194,52 @@ module Jac
       def initialize(streams)
         @streams = streams
         @merger = Merger.new
+        @comiled = compile
       end
 
       # Parses all streams and resolves requested profile
       # @param [Array] profile list of profile names to be merged
       # @return [OpenStruct] instance which contains all resolved profile fields
       def read(*profile)
-        result = @streams
-                 .flat_map { |stream, _name| read_stream(stream) }
-                 .inject(DEFAULT_CONFIGURATION.call) { |acc, elem| update(acc, elem) }
-        OpenStruct.new(evaluate(resolve(profile, result)).merge('profile' => profile))
+        OpenStruct.new(evaluate(resolve(profile, @compiled)).merge('profile' => profile))
       end
 
       private
 
-      def read_stream(stream)
+      def compile
+        @compiled = @streams
+                 .flat_map { |stream, name| read_stream(stream, name) }
+                 .inject(DEFAULT_CONFIGURATION.call) { |acc, elem| update(acc, elem) }
+      end
+
+      def read_stream(stream, name)
         # Each stream consists of one or more documents
         YAML.parse_stream(stream).children.flat_map do |document|
           # Will use separate visitor per YAML document.
           visitor = Jac::Parser::VisitorToRuby.create
+          visitor.stream_name = name
           # Expecting document to be single mapping
           profile_mapping = document.children.first
           raise(ArgumentError, 'Mapping expected') unless profile_mapping.is_a? Psych::Nodes::Mapping
           # Then mapping should be expanded to (key, value) pairs. Because yaml overwrites
           # values for duplicated keys. This is not desired behaviour. We need to merge
           # such entries
-          profile_mapping
-            .children
-            .each_slice(2)
-            .map { |k, v| { visitor.accept(k) => visitor.accept(v) } }
+          elements = profile_mapping
+                     .children
+                     .each_slice(2)
+                     .map { |k, v| Values.of(visitor.accept(k) => visitor.accept(v)) }
+
+          Values.of(elements)
         end
       end
 
       def update(config, config_part)
         config_part.each do |profile, values|
-          profile_values = config[profile]
+          profile_name = profile._value
+          profile_values = config[profile_name]
           unless profile_values
             profile_values = {}
-            config[profile] = profile_values
+            config[profile_name] = profile_values
           end
           merge!(profile_values, values)
         end

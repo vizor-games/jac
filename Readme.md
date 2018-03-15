@@ -202,6 +202,7 @@ no_debug:
 ```
 
 Resulting profile will have `Set('-fno-rtti', '-DNDEBUG')` in `release profile`
+
 ## Generic profiles
 
 Same result as shown above can be achieved with generic profiles. Generic profile
@@ -220,6 +221,31 @@ which profile will be used.
 
 >  If running on Ruby 2.4+ you can use named captures in generic profiles.
 > Named captures will be stored in `c.named_captures` as `Hash`. 
+
+## Implicit profiles
+
+`jac` has two implicit profiles which automaticly aplied to any configuration
+it produces: `^base` and `^top` _(note `^` at the begining of profile name)_.
+
+If for some reason you need to provide base values for *any* profile you use
+you should define them in `^base` profile. And if you need always apply some 
+values onto any configuration you receive you should define them in `^top`
+profile.
+
+```yaml
+^base:
+   java: 1.7 # Use java 1.7 by default
+
+^top:
+   Xmx: 512M # Override any Xmx value if present
+```
+
+Using this example we can get `default` profile containing
+
+```
+java: 1.7
+Xmx: 512M
+```
 
 ## License
 

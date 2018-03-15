@@ -58,6 +58,52 @@ describe Configuration do
     end
 
     describe 'profiles' do
+      context 'when `!top` profile is defined' do
+        let(:config) do
+          <<-CONFIG.strip_indent
+          ^top:
+            foo: 42
+            bar: 'hello'
+
+          default:
+            foo: 43
+
+          CONFIG
+        end
+        it 'automaticly merged over resulting profile' do
+          result = Configuration.read('default', config)
+          expect(result.foo).to eq(42)
+          expect(result.bar).to eq('hello')
+        end
+
+        it 'does not bring `^top` name entry in profile name' do
+          result = Configuration.read('default', config)
+          expect(result.profile).to match_array(%w[default])
+        end
+      end
+
+      context 'when `^base` profile is defined' do
+        let(:config) do
+          <<-CONFIG.strip_indent
+          ^base:
+            foo: 42
+            bar: 'hello'
+          default:
+            foo: 43
+          CONFIG
+        end
+        it 'automaticly merges under result profile' do
+          result = Configuration.read('default', config)
+          expect(result.foo).to eq(43)
+          expect(result.bar).to eq('hello')
+        end
+
+        it 'does not bring `!base` name entry in profile name' do
+          result = Configuration.read('default', config)
+          expect(result.profile).to match_array(%w[default])
+        end
+      end
+
       it 'always contains `default` profile' do
         expect(Configuration.read('default')).to be_truthy
       end
@@ -140,6 +186,60 @@ describe Configuration do
         config = "a:\n  extends: b\nb:\n  a: 1"
         result = Configuration.read('a', config)
         expect(result.a).to eq(1)
+      end
+
+      context 'when `^top` profile used in extends' do
+        let(:config_single) do
+          <<-CONFIG.strip_indent
+          ^top:
+            foo: 42
+          bar:
+            extends: ^top
+          CONFIG
+        end
+
+        let(:config_array) do
+          <<-CONFIG.strip_indent
+          ^top:
+            foo: 42
+          bar:
+            extends: [ ^top ]
+          CONFIG
+        end
+
+        it do
+          expect { Configuration.read('bar', config_single) }
+            .to raise_error(ArgumentError, '`^top` is not allowed here')
+          expect { Configuration.read('bar', config_array) }
+            .to raise_error(ArgumentError, '`^top` is not allowed here')
+        end
+      end
+
+      context 'when `^base` profile used in extends' do
+        let(:config_single) do
+          <<-CONFIG.strip_indent
+          ^base:
+            foo: 42
+          bar:
+            extends: ^base
+          CONFIG
+        end
+
+        let(:config_array) do
+          <<-CONFIG.strip_indent
+          ^base:
+            foo: 42
+          bar:
+            extends: [ ^base ]
+          CONFIG
+        end
+
+        it do
+          expect { Configuration.read('bar', config_single) }
+            .to raise_error(ArgumentError, '`^base` is not allowed here')
+          expect { Configuration.read('bar', config_array) }
+            .to raise_error(ArgumentError, '`^base` is not allowed here')
+        end
       end
     end
 

@@ -177,14 +177,28 @@ module Jac
   # If profile name matches multiple generic profiles it not defined
   # which profile will be used.
   module Configuration
+    # Name of top level profile. ^top profile is implicit
+    # it automaticly merged on top of resulting configuration
+    TOP_PROFILE_NAME = '^top'.freeze
+    # Name of base level profile. ^base profile is implicit
+    # resulting configuration automaticly merged on top of it.
+    BASE_PROFILE_NAME = '^base'.freeze
+    # Any configuration set always contains `default` profile
+    # which is loaded when no profile requested.
+    DEFAULT_PROFILE_NAME = 'default'.freeze
+    # List of default profiles. Having this list we can easily create default
+    # configuration.
+    BASIC_PROFILES = [
+      TOP_PROFILE_NAME,
+      BASE_PROFILE_NAME,
+      DEFAULT_PROFILE_NAME
+    ].freeze
+    # Key where all inherited profiles listed
+    EXTENDS_KEY = 'extends'.freeze
+
     # Reads and evaluates configuration for given set of streams
     # and profile
     class ConfigurationReader
-      # Any configuration set always contains `default` profile
-      # which is loaded when no profile requested.
-      DEFAULT_PROFILE_NAME = 'default'.freeze
-      # Creates "empty" config
-      DEFAULT_CONFIGURATION = -> () { { DEFAULT_PROFILE_NAME => {} } }
       attr_reader :merger
       # Creates configuration reader
       # @param [Array] streams of pairs containing YAML document and provided
@@ -200,11 +214,21 @@ module Jac
       def read(*profile)
         result = @streams
                  .flat_map { |stream, _name| read_stream(stream) }
-                 .inject(DEFAULT_CONFIGURATION.call) { |acc, elem| update(acc, elem) }
-        OpenStruct.new(evaluate(resolve(profile, result)).merge('profile' => profile))
+                 .inject(default_configuration) { |acc, elem| update(acc, elem) }
+        # Keep original profile name
+        original_profile = profile
+        # Add implicit profiles
+        profile =
+          [Configuration::BASE_PROFILE_NAME, profile, Configuration::TOP_PROFILE_NAME].flatten
+        OpenStruct.new(evaluate(resolve(profile, result)).merge('profile' => original_profile))
       end
 
       private
+
+      # Creates empty configuration object.
+      def default_configuration
+        Configuration::BASIC_PROFILES.inject({}) { |acc, elem| acc.update(elem => {}) }
+      end
 
       def read_stream(stream)
         # Each stream consists of one or more documents
@@ -256,9 +280,6 @@ module Jac
 
     # Describes profile resolving strategy
     class ProfileResolver
-      # Key where all inherited profiles listed
-      EXTENDS_KEY = 'extends'.freeze
-
       attr_reader :config, :merger
 
       def initialize(config)
@@ -273,13 +294,24 @@ module Jac
             raise(ArgumentError, msg)
           end
           profile_values = find_profile(elem)
-          # Find all inheritors
-          extends = *profile_values[EXTENDS_KEY] || []
+          # Find all parent_profiles
+          extends = parent_profiles(profile_values)
           # We can do not check extends. Empty profile returns {}
           # Inherited values goes first
           inherited = merger.merge(acc, resolve(extends, resolved + [elem]))
           merger.merge(inherited, profile_values)
         end
+      end
+
+      # Fetches list of parent profile
+      # @param [Hash] values current profile values
+      # @return [Array] of profile names
+      def parent_profiles(values)
+        extends = *values[Configuration::EXTENDS_KEY] || []
+        [Configuration::TOP_PROFILE_NAME, Configuration::BASE_PROFILE_NAME].each do |implicit|
+          raise(ArgumentError, "`#{implicit}` is not allowed here") if extends.include?(implicit)
+        end
+        extends
       end
 
       def find_profile(profile_name)
@@ -455,7 +487,7 @@ module Jac
       # names to read
       # @return [OpenStruct] instance which contains all resolved profile fields
       def read(profile, *streams)
-        profile = [ConfigurationReader::DEFAULT_PROFILE_NAME] if profile.empty?
+        profile = [Configuration::DEFAULT_PROFILE_NAME] if profile.empty?
         ConfigurationReader.new(streams).read(*profile)
       end
 

@@ -400,7 +400,7 @@ module Jac
 
       def resolve_object
         # Initialize context object with root
-        @ctx_object = @object
+        @ctx_object = @context
         @object.each_key { |k| evaluate(k) }
         # Cleanup accidentally created values (when referencing missing values)
         @evaluated.delete_if { |k, _v| !@object.key?(k) }

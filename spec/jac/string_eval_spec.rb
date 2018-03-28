@@ -21,6 +21,22 @@ describe Configuration do
       end
     end
 
+    context 'profile name available throug `c.profile`' do
+      let(:conf) do
+        <<-CONFIG.strip_indent
+        foo:
+          profile_name: "\#{c.profile.join('-')}"
+        bar:
+          empty: # nothing
+        CONFIG
+      end
+
+      it do
+        c = Configuration.read(%w[foo bar], conf)
+        expect(c.profile_name).to eq(c.profile.join('-'))
+      end
+    end
+
     context 'neighbour fields can be referenced without calling any object' do
       let(:conf) do
         <<-CONFIG.strip_indent

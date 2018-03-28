@@ -220,7 +220,7 @@ module Jac
         # Add implicit profiles
         profile =
           [Configuration::BASE_PROFILE_NAME, profile, Configuration::TOP_PROFILE_NAME].flatten
-        OpenStruct.new(evaluate(resolve(profile, result)).merge('profile' => original_profile))
+        OpenStruct.new(evaluate(resolve(profile, result).merge('profile' => original_profile)))
       end
 
       private

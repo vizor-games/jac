@@ -47,11 +47,11 @@ describe Configuration do
       end
 
       it 'evaluates \#{...} inside nested hashes and arrays' do
-        config = "foo:\n  a: [ '#{2 + 2}' ]"
+        config = "foo:\n  a: [ '\#{2 + 2}' ]"
         result = Configuration.read('foo', config)
         expect(result.a).to match_array(%w[4])
 
-        config = "foo:\n a:\n    b: '#{2 + 2}'"
+        config = "foo:\n a:\n    b: '\#{2 + 2}'"
         result = Configuration.read('foo', config)
         expect(result.a).to eq('b' => '4')
       end
@@ -70,6 +70,7 @@ describe Configuration do
 
           CONFIG
         end
+
         it 'automaticly merged over resulting profile' do
           result = Configuration.read('default', config)
           expect(result.foo).to eq(42)

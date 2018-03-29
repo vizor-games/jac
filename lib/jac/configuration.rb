@@ -349,8 +349,6 @@ module Jac
                               .keys
                               .select { |k| k[0] == '/' && k[-1] == '/' }
                               .map { |k| [k, Regexp.new(k[1..-2])] }
-
-        @generic_profiles
       end
     end
 
@@ -358,29 +356,27 @@ module Jac
     # when referencing profile inside evaluated
     # expressions
     class EvaluationContext
-      def initialize(evaluator)
+      def initialize(hash, evaluator)
         @evaluator = evaluator
-      end
-
-      def respond_to_missing?(_meth, _args, &_block)
-        true
-      end
-
-      def method_missing(meth, *args, &block)
-        # rubocop ispection hack
-        return super unless respond_to_missing?(meth, args, &block)
-        @evaluator.evaluate(meth.to_s)
+        hash.each_key do |key|
+          exp = <<-EVAL.strip_indent
+          def #{key}
+            @evaluator.evaluate("#{key}")
+          end
+          EVAL
+          eval(exp, binding)
+        end
       end
     end
 
     # Evaluates all strings inside resolved profile
     # object
     class ConfigurationEvaluator
-      def initialize(src_object, dst_object)
+      def initialize(src_object)
         @object = src_object
-        @evaluated = dst_object
-        @context = EvaluationContext.new(self)
-        resolve_object
+        @evaluated = {}
+        # Initialize context object with root
+        @context = EvaluationContext.new(@object, self)
       end
 
       def evaluate(key)
@@ -396,17 +392,16 @@ module Jac
       alias conf c
       alias cfg c
 
-      private
-
-      def resolve_object
-        # Initialize context object with root
+      def evaluate_values
         @ctx_object = @context
         @object.each_key { |k| evaluate(k) }
         # Cleanup accidentally created values (when referencing missing values)
         @evaluated.delete_if { |k, _v| !@object.key?(k) }
       end
 
-      def get_binding(obj)
+      private
+
+      def get_binding(object)
         binding
       end
 
@@ -430,7 +425,7 @@ module Jac
 
       def eval_string(o)
         evaluated = /#\{.+?\}/.match(o) do
-          eval('"' + o + '"', get_binding(self))
+          eval('"' + o + '"', get_binding(@ctx_object))
         end
 
         evaluated || o
@@ -441,7 +436,7 @@ module Jac
       end
 
       def method_missing(meth, *args, &block)
-        # rubocop ispection hack
+        # rubocop inspection hack
         return super unless respond_to_missing?(meth, args, &block)
         @ctx_object.send(meth, *args, &block)
       end
@@ -450,7 +445,7 @@ module Jac
       # This trick allows us to reference local variables
       # using `self` calls.
       # @param ctx [Object] object to use in current evaluation
-      # @param &block [Proc] evluation logic
+      # @param &block [Proc] evaluation logic
       # @return [Object] result of evaluation
       def contextual(ctx)
         memo = @ctx_object
@@ -463,9 +458,7 @@ module Jac
 
       class << self
         def evaluate(o)
-          dst = {}
-          ConfigurationEvaluator.new(o, dst)
-          dst
+          ConfigurationEvaluator.new(o).evaluate_values
         end
       end
     end

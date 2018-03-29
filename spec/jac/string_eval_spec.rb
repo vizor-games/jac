@@ -73,7 +73,7 @@ describe Configuration do
       end
     end
 
-    context 'list elements can be accesed via `self[idx]`' do
+    context 'list elements can be accessed via `self[idx]`' do
       let(:conf) do
         <<-CONFIG.strip_indent
         default:
@@ -84,6 +84,22 @@ describe Configuration do
       it do
         c = Configuration.read('default', conf)
         expect(c.list).to match_array(%w[1 2 3 2 1])
+      end
+    end
+
+    context 'profile values should shadow object methods' do
+      let(:config) do
+        <<-CONFIG.strip_indent
+        default:
+          methods:
+            - GET
+            - POST
+          supported_methods: "\#{c.methods.join(', ')}"
+        CONFIG
+      end
+
+      it do
+        expect(Configuration.read('default', config).supported_methods).to eq('GET, POST')
       end
     end
   end

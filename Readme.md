@@ -1,7 +1,7 @@
 # Jac - just another configuration lib
 
 [![Gem](https://img.shields.io/gem/v/jac.svg)](https://rubygems.org/gems/jac)
-[![Coverage Status](https://img.shields.io/codeclimate/coverage/github/vizor-games/jac.svg)](https://codeclimate.com/github/vizor-games/jac)
+[![Coverage Status](https://img.shields.io/codeclimate/coverage/vizor-games/jac.svg)](https://codeclimate.com/github/vizor-games/jac)
 [![Code Climate](https://codeclimate.com/github/vizor-games/jac/badges/gpa.svg)](https://codeclimate.com/github/vizor-games/jac)
 [![Build Status](https://travis-ci.org/vizor-games/jac.svg?branch=master)](https://travis-ci.org/vizor-games/jac)
 

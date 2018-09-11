@@ -24,7 +24,10 @@ module Jac
       # @param [Hash] other values
       # @return [Hash] updated base hash
       def merge!(base, other)
-        base.merge!(other, &method(:resolve_values))
+        # base.merge!(other, &method(:resolve_values))
+        base.merge!(other) do |key, base_value, other_value|
+          resolve_values(key, base_value, other_value)
+        end
       end
 
       # @param [Object] _key

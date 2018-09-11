@@ -1,3 +1,7 @@
+# Version 0.0.5
+
+* [Fixed] Merger#merge! fails to call `resolve_values` properly on JRuby 9.2.0
+
 # Version 0.0.4
 
 * [#3](https://github.com/vizor-games/jac/issues/3) Allow reference local values inside string evaluations
